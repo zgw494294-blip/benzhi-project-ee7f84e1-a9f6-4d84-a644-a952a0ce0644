@@ -49,14 +49,10 @@ func (s *Service) IssuePermit(ctx context.Context, cmd IssuePermitCommand) (doma
 		if err := tx.UpdateDossier(&dossier, cmd.ExpectedVersion); err != nil {
 			return err
 		}
+		if _, err := audit.Append(tx, dossier.ID, "permit.issued", cmd.Actor, permit, permit.IssuedAt); err != nil {
+			return err
+		}
 		return nil
-	})
-	if err != nil {
-		return permit, dossier, err
-	}
-	err = s.store.Transaction(ctx, func(tx *repository.Tx) error {
-		_, appendErr := audit.Append(tx, dossier.ID, "permit.issued", cmd.Actor, permit, permit.IssuedAt)
-		return appendErr
 	})
 	return permit, dossier, err
 }
