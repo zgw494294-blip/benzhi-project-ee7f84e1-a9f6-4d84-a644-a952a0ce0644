@@ -10,7 +10,7 @@ import (
 )
 
 func (a *API) CreateDossierHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := a.actorAndRole(domain.RoleEngineer)
+	actor, err := a.actorAndRole(r, domain.RoleEngineer)
 	if err != nil {
 		writeError(w, err)
 		return

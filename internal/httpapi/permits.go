@@ -8,7 +8,7 @@ import (
 )
 
 func (a *API) IssuePermitHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := a.actorAndRole(domain.RoleDeployer)
+	actor, err := a.actorAndRole(r, domain.RoleDeployer)
 	if err != nil {
 		writeError(w, err)
 		return

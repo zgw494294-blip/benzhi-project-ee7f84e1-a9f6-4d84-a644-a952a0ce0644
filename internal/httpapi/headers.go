@@ -8,15 +8,12 @@ import (
 	"buoy-calibration-gate/internal/domain"
 )
 
-func (a *API) actorAndRole(allowed ...domain.Role) (string, error) {
-	a.identityMu.RLock()
-	identity := a.identity
-	a.identityMu.RUnlock()
-	actor := identity.actor
+func (a *API) actorAndRole(r *http.Request, allowed ...domain.Role) (string, error) {
+	actor := strings.TrimSpace(r.Header.Get("X-Actor"))
 	if actor == "" {
 		return "", &domain.RuleError{Field: "X-Actor", Message: "请求头不能为空"}
 	}
-	if err := domain.RequireRole(identity.role, allowed...); err != nil {
+	if err := domain.RequireRole(domain.Role(strings.TrimSpace(r.Header.Get("X-Role"))), allowed...); err != nil {
 		return "", err
 	}
 	return actor, nil
