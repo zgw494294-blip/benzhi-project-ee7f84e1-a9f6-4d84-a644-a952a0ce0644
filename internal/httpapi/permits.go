@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"context"
 	"net/http"
 
 	"buoy-calibration-gate/internal/calibration"
@@ -24,7 +23,7 @@ func (a *API) IssuePermitHandler(w http.ResponseWriter, r *http.Request) {
 		writeBadRequest(w, err.Error())
 		return
 	}
-	permit, dossier, err := a.service.IssuePermit(context.WithoutCancel(r.Context()), calibration.IssuePermitCommand{DossierID: r.PathValue("dossierID"), ExpectedVersion: version, Actor: actor})
+	permit, dossier, err := a.service.IssuePermit(r.Context(), calibration.IssuePermitCommand{DossierID: r.PathValue("dossierID"), ExpectedVersion: version, Actor: actor})
 	if err != nil {
 		writeError(w, err)
 		return

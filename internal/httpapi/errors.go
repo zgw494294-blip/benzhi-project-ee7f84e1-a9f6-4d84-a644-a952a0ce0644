@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -27,6 +28,8 @@ func writeError(w http.ResponseWriter, err error) {
 	var validation *domain.ValidationError
 	var conflict *domain.ResourceConflictError
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		status, code, message = http.StatusServiceUnavailable, "request_cancelled", "请求已取消或超时，事务未提交"
 	case errors.As(err, &rule):
 		status, code, message = http.StatusBadRequest, "validation_error", rule.Message
 	case errors.As(err, &validation):
