@@ -44,7 +44,7 @@ func (s *Service) ReviewPreflight(ctx context.Context, dossierID, actor string) 
 		return err
 	})
 	if err != nil {
-		err = fmt.Errorf("review preflight: %v", err)
+		err = fmt.Errorf("review preflight: %w", err)
 	}
 	return result, err
 }

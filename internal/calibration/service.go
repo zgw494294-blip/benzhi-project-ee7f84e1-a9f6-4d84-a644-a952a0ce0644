@@ -30,7 +30,7 @@ func randomID() string {
 
 func (s *Service) Ready(ctx context.Context) error {
 	if err := s.store.Ready(ctx); err != nil {
-		return fmt.Errorf("calibration readiness: %v", err)
+		return fmt.Errorf("calibration readiness: %w", err)
 	}
 	return nil
 }

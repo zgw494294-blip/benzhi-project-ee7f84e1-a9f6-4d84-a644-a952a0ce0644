@@ -53,7 +53,7 @@ func (s *Service) IssuePermit(ctx context.Context, cmd IssuePermitCommand) (doma
 		return err
 	})
 	if err != nil {
-		err = fmt.Errorf("issue permit: %v", err)
+		err = fmt.Errorf("issue permit: %w", err)
 	}
 	return permit, dossier, err
 }
@@ -151,7 +151,7 @@ func (s *Service) VerifyPermit(ctx context.Context, number string) (PermitVerifi
 		return nil
 	})
 	if err != nil {
-		err = fmt.Errorf("verify permit: %v", err)
+		err = fmt.Errorf("verify permit: %w", err)
 	}
 	return result, err
 }

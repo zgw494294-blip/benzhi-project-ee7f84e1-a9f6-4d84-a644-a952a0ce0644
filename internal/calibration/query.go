@@ -16,7 +16,7 @@ func (s *Service) GetDossier(ctx context.Context, id string) (repository.Dossier
 		return err
 	})
 	if err != nil {
-		err = fmt.Errorf("get dossier: %v", err)
+		err = fmt.Errorf("get dossier: %w", err)
 	}
 	return result, err
 }
@@ -24,7 +24,7 @@ func (s *Service) GetDossier(ctx context.Context, id string) (repository.Dossier
 func (s *Service) Timeline(ctx context.Context, id string) (audit.Timeline, error) {
 	result, err := audit.LoadTimeline(ctx, s.store, id)
 	if err != nil {
-		err = fmt.Errorf("load timeline: %v", err)
+		err = fmt.Errorf("load timeline: %w", err)
 	}
 	return result, err
 }
