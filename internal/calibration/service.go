@@ -4,26 +4,22 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"sync"
 	"time"
 
 	"buoy-calibration-gate/internal/repository"
 )
 
 type Service struct {
-	store             *repository.Store
-	now               func() time.Time
-	id                func() string
-	verificationMu    sync.RWMutex
-	verificationCache map[string]PermitVerification
+	store *repository.Store
+	now   func() time.Time
+	id    func() string
 }
 
 func NewService(store *repository.Store) *Service {
 	return &Service{
-		store:             store,
-		now:               time.Now,
-		id:                randomID,
-		verificationCache: make(map[string]PermitVerification),
+		store: store,
+		now:   time.Now,
+		id:    randomID,
 	}
 }
 

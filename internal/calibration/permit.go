@@ -77,13 +77,6 @@ type VerificationMaterial struct {
 }
 
 func (s *Service) VerifyPermit(ctx context.Context, number string) (PermitVerification, error) {
-	s.verificationMu.RLock()
-	cached, found := s.verificationCache[number]
-	s.verificationMu.RUnlock()
-	if found {
-		return clonePermitVerification(cached), nil
-	}
-
 	var result PermitVerification
 	err := s.store.View(ctx, func(tx *repository.Tx) error {
 		var err error
@@ -154,23 +147,7 @@ func (s *Service) VerifyPermit(ctx context.Context, number string) (PermitVerifi
 		result.Valid = len(result.ReasonCodes) == 0
 		return nil
 	})
-	if err == nil {
-		s.verificationMu.Lock()
-		s.verificationCache[number] = clonePermitVerification(result)
-		s.verificationMu.Unlock()
-	}
 	return result, err
-}
-
-func clonePermitVerification(source PermitVerification) PermitVerification {
-	clone := source
-	clone.Checks = make(map[string]VerificationCheck, len(source.Checks))
-	for name, check := range source.Checks {
-		clone.Checks[name] = check
-	}
-	clone.ReasonCodes = append([]string(nil), source.ReasonCodes...)
-	clone.VerificationMaterial.FieldOrder = append([]string(nil), source.VerificationMaterial.FieldOrder...)
-	return clone
 }
 
 func samePermit(a, b domain.DeploymentPermit) bool {
