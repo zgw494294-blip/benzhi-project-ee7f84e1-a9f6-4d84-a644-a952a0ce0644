@@ -2,6 +2,7 @@ package calibration
 
 import (
 	"context"
+	"fmt"
 
 	"buoy-calibration-gate/internal/audit"
 	"buoy-calibration-gate/internal/repository"
@@ -14,9 +15,16 @@ func (s *Service) GetDossier(ctx context.Context, id string) (repository.Dossier
 		result, err = tx.Snapshot(id)
 		return err
 	})
+	if err != nil {
+		err = fmt.Errorf("get dossier: %v", err)
+	}
 	return result, err
 }
 
 func (s *Service) Timeline(ctx context.Context, id string) (audit.Timeline, error) {
-	return audit.LoadTimeline(ctx, s.store, id)
+	result, err := audit.LoadTimeline(ctx, s.store, id)
+	if err != nil {
+		err = fmt.Errorf("load timeline: %v", err)
+	}
+	return result, err
 }

@@ -52,6 +52,9 @@ func (s *Service) IssuePermit(ctx context.Context, cmd IssuePermitCommand) (doma
 		_, err = audit.Append(tx, dossier.ID, "permit.issued", cmd.Actor, permit, now)
 		return err
 	})
+	if err != nil {
+		err = fmt.Errorf("issue permit: %v", err)
+	}
 	return permit, dossier, err
 }
 
@@ -147,6 +150,9 @@ func (s *Service) VerifyPermit(ctx context.Context, number string) (PermitVerifi
 		result.Valid = len(result.ReasonCodes) == 0
 		return nil
 	})
+	if err != nil {
+		err = fmt.Errorf("verify permit: %v", err)
+	}
 	return result, err
 }
 

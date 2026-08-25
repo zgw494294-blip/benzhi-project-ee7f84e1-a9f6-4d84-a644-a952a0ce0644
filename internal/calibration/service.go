@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"buoy-calibration-gate/internal/repository"
@@ -27,4 +28,9 @@ func randomID() string {
 	return hex.EncodeToString(data)
 }
 
-func (s *Service) Ready(ctx context.Context) error { return s.store.Ready(ctx) }
+func (s *Service) Ready(ctx context.Context) error {
+	if err := s.store.Ready(ctx); err != nil {
+		return fmt.Errorf("calibration readiness: %v", err)
+	}
+	return nil
+}

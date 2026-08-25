@@ -2,6 +2,7 @@ package calibration
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"buoy-calibration-gate/internal/audit"
@@ -42,6 +43,9 @@ func (s *Service) ReviewPreflight(ctx context.Context, dossierID, actor string) 
 		result, _, _, err = buildPreflight(snapshot.Dossier, snapshot.Sensors, snapshot.Runs, snapshot.Deviations, actor)
 		return err
 	})
+	if err != nil {
+		err = fmt.Errorf("review preflight: %v", err)
+	}
 	return result, err
 }
 
