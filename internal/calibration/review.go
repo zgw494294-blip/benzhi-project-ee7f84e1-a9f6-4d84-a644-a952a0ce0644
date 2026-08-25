@@ -39,7 +39,14 @@ func (s *Service) ReviewPreflight(ctx context.Context, dossierID, actor string) 
 		if snapshot.Dossier.Status != domain.StatusReviewPending {
 			return domain.ErrInvalidState
 		}
+		if cached, ok := s.cachedPreflight(dossierID, snapshot.Dossier.Version); ok {
+			result = cached
+			return nil
+		}
 		result, _, _, err = buildPreflight(snapshot.Dossier, snapshot.Sensors, snapshot.Runs, snapshot.Deviations, actor)
+		if err == nil {
+			s.cachePreflight(dossierID, snapshot.Dossier.Version, result)
+		}
 		return err
 	})
 	return result, err
