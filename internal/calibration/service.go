@@ -10,13 +10,23 @@ import (
 )
 
 type Service struct {
-	store *repository.Store
-	now   func() time.Time
-	id    func() string
+	store           *repository.Store
+	now             func() time.Time
+	id              func() string
+	createGate      chan struct{}
+	creationReplays map[string]creationReplay
 }
 
 func NewService(store *repository.Store) *Service {
-	return &Service{store: store, now: time.Now, id: randomID}
+	gate := make(chan struct{}, 1)
+	gate <- struct{}{}
+	return &Service{
+		store:           store,
+		now:             time.Now,
+		id:              randomID,
+		createGate:      gate,
+		creationReplays: make(map[string]creationReplay),
+	}
 }
 
 func randomID() string {

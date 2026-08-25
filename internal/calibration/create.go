@@ -9,6 +9,11 @@ import (
 	"buoy-calibration-gate/internal/repository"
 )
 
+type creationReplay struct {
+	requestHash string
+	resourceID  string
+}
+
 func (s *Service) CreateDossier(ctx context.Context, cmd CreateDossierCommand) (domain.CalibrationDossier, bool, error) {
 	var result domain.CalibrationDossier
 	var replay bool
@@ -26,19 +31,23 @@ func (s *Service) CreateDossier(ctx context.Context, cmd CreateDossierCommand) (
 	if err != nil {
 		return result, false, err
 	}
+	select {
+	case <-ctx.Done():
+		return result, false, ctx.Err()
+	case <-s.createGate:
+	}
+	defer func() { s.createGate <- struct{}{} }()
+	if existing, found := s.creationReplays[cmd.IdempotencyKey]; found {
+		if existing.requestHash != hash {
+			return result, false, domain.ErrIdempotencyKey
+		}
+		err = s.store.View(ctx, func(tx *repository.Tx) error {
+			result, err = tx.GetDossier(existing.resourceID)
+			return err
+		})
+		return result, err == nil, err
+	}
 	err = s.store.Transaction(ctx, func(tx *repository.Tx) error {
-		existing, found, err := tx.FindIdempotency("create-dossier", cmd.IdempotencyKey)
-		if err != nil {
-			return err
-		}
-		if found {
-			if existing.RequestHash != hash {
-				return domain.ErrIdempotencyKey
-			}
-			result, err = tx.GetDossier(existing.ResourceID)
-			replay = err == nil
-			return err
-		}
 		now := s.now().UTC()
 		result, err = domain.NewDossier(s.id(), normalizedBuoy, cmd.TargetArea, cmd.Owner, cmd.PlannedDeploymentAt, now)
 		if err != nil {
@@ -57,6 +66,9 @@ func (s *Service) CreateDossier(ctx context.Context, cmd CreateDossierCommand) (
 		}
 		return tx.InsertIdempotency(repository.IdempotencyRecord{Scope: "create-dossier", Key: cmd.IdempotencyKey, RequestHash: hash, ResourceID: result.ID, CreatedAt: now})
 	})
+	if err == nil {
+		s.creationReplays[cmd.IdempotencyKey] = creationReplay{requestHash: hash, resourceID: result.ID}
+	}
 	return result, replay, err
 }
 
