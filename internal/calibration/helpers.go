@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"buoy-calibration-gate/internal/domain"
 )
@@ -34,4 +35,14 @@ func requireExpected(actual, expected int64) error {
 		return fmt.Errorf("%w: expected %d, current %d", domain.ErrConflict, expected, actual)
 	}
 	return nil
+}
+
+func (s *Service) lockDossier(dossierID string) func() {
+	lock, ok := s.dossierLocks[dossierID]
+	if !ok {
+		lock = &sync.Mutex{}
+		s.dossierLocks[dossierID] = lock
+	}
+	lock.Lock()
+	return lock.Unlock
 }

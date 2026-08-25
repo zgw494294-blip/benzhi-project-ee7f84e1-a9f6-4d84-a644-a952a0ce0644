@@ -15,6 +15,8 @@ func (s *Service) AddSensor(ctx context.Context, cmd AddSensorCommand) (domain.S
 	if err := requireActor(cmd.Actor); err != nil {
 		return sensor, dossier, err
 	}
+	unlock := s.lockDossier(cmd.DossierID)
+	defer unlock()
 	err := s.store.Transaction(ctx, func(tx *repository.Tx) error {
 		var err error
 		dossier, err = tx.GetDossier(cmd.DossierID)
