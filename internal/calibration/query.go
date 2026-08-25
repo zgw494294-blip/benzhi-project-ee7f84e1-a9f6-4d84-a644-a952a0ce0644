@@ -18,5 +18,20 @@ func (s *Service) GetDossier(ctx context.Context, id string) (repository.Dossier
 }
 
 func (s *Service) Timeline(ctx context.Context, id string) (audit.Timeline, error) {
-	return audit.LoadTimeline(ctx, s.store, id)
+	s.timelineMu.RLock()
+	cached, found := s.timelineCache[id]
+	s.timelineMu.RUnlock()
+	if found {
+		return cached, nil
+	}
+	timeline, err := audit.LoadTimeline(ctx, s.store, id)
+	if err != nil {
+		return timeline, err
+	}
+	if len(timeline.Events) > 0 && timeline.Events[len(timeline.Events)-1].EventType == "permit.issued" {
+		s.timelineMu.Lock()
+		s.timelineCache[id] = timeline
+		s.timelineMu.Unlock()
+	}
+	return timeline, nil
 }
