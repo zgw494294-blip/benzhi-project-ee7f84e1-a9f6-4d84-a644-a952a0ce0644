@@ -9,6 +9,13 @@ import (
 	"buoy-calibration-gate/internal/repository"
 )
 
+type runReplay struct {
+	requestHash string
+	run         domain.CalibrationRun
+	deviation   *domain.DeviationCase
+	dossier     domain.CalibrationDossier
+}
+
 func (s *Service) SubmitRun(ctx context.Context, cmd SubmitRunCommand) (domain.CalibrationRun, *domain.DeviationCase, domain.CalibrationDossier, bool, error) {
 	var run domain.CalibrationRun
 	var deviation *domain.DeviationCase
@@ -26,6 +33,15 @@ func (s *Service) SubmitRun(ctx context.Context, cmd SubmitRunCommand) (domain.C
 	}{cmd.DossierID, cmd.SensorID, strings.ToLower(strings.TrimSpace(cmd.EvidenceDigest)), cmd.ReferenceValue, cmd.MeasuredValue, cmd.AmbientTemperature})
 	if err != nil {
 		return run, deviation, dossier, false, err
+	}
+	s.runReplayMu.Lock()
+	cached, cachedFound := s.runReplays[cmd.IdempotencyKey]
+	s.runReplayMu.Unlock()
+	if cachedFound {
+		if cached.requestHash != hash {
+			return run, deviation, dossier, false, domain.ErrIdempotencyKey
+		}
+		return cached.run, cached.deviation, cached.dossier, true, nil
 	}
 	err = s.store.Transaction(ctx, func(tx *repository.Tx) error {
 		scope := "submit-run:" + cmd.DossierID + ":" + cmd.SensorID
@@ -129,5 +145,10 @@ func (s *Service) SubmitRun(ctx context.Context, cmd SubmitRunCommand) (domain.C
 		}
 		return tx.InsertIdempotency(repository.IdempotencyRecord{Scope: scope, Key: cmd.IdempotencyKey, RequestHash: hash, ResourceID: run.ID, CreatedAt: now})
 	})
+	if err == nil {
+		s.runReplayMu.Lock()
+		s.runReplays[cmd.IdempotencyKey] = runReplay{requestHash: hash, run: run, deviation: deviation, dossier: dossier}
+		s.runReplayMu.Unlock()
+	}
 	return run, deviation, dossier, replay, err
 }
