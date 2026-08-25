@@ -3,14 +3,23 @@ package httpapi
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"buoy-calibration-gate/internal/calibration"
+	"buoy-calibration-gate/internal/domain"
 )
 
 type API struct {
-	service *calibration.Service
-	mux     *http.ServeMux
+	service    *calibration.Service
+	mux        *http.ServeMux
+	identityMu sync.RWMutex
+	identity   requestIdentity
+}
+
+type requestIdentity struct {
+	actor string
+	role  domain.Role
 }
 
 func New(service *calibration.Service) *API {
@@ -20,11 +29,17 @@ func New(service *calibration.Service) *API {
 }
 
 func (a *API) Handler() http.Handler {
-	return requestMiddleware(a.mux)
+	return a.requestMiddleware(a.mux)
 }
 
-func requestMiddleware(next http.Handler) http.Handler {
+func (a *API) requestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		a.identityMu.Lock()
+		a.identity = requestIdentity{
+			actor: strings.TrimSpace(r.Header.Get("X-Actor")),
+			role:  domain.Role(strings.TrimSpace(r.Header.Get("X-Role"))),
+		}
+		a.identityMu.Unlock()
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-store")

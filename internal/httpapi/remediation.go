@@ -8,7 +8,7 @@ import (
 )
 
 func (a *API) RemediateHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := actorAndRole(r, domain.RoleEngineer)
+	actor, err := a.actorAndRole(domain.RoleEngineer)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -33,7 +33,7 @@ func (a *API) RemediateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) BatchRemediateHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := actorAndRole(r, domain.RoleEngineer)
+	actor, err := a.actorAndRole(domain.RoleEngineer)
 	if err != nil {
 		writeError(w, err)
 		return

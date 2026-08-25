@@ -8,7 +8,7 @@ import (
 )
 
 func (a *API) ReturnDeviationHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := actorAndRole(r, domain.RoleReviewer)
+	actor, err := a.actorAndRole(domain.RoleReviewer)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -33,7 +33,7 @@ func (a *API) ReturnDeviationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) ApproveHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := actorAndRole(r, domain.RoleReviewer)
+	actor, err := a.actorAndRole(domain.RoleReviewer)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -58,7 +58,7 @@ func (a *API) ApproveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) ReviewPreflightHandler(w http.ResponseWriter, r *http.Request) {
-	actor, err := actorAndRole(r, domain.RoleReviewer)
+	actor, err := a.actorAndRole(domain.RoleReviewer)
 	if err != nil {
 		writeError(w, err)
 		return
