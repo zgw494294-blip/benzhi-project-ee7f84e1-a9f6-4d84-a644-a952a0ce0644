@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 
 	"buoy-calibration-gate/internal/calibration"
@@ -24,7 +25,7 @@ func (a *API) AddSensorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.DossierID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), version, actor
-	sensor, dossier, err := a.service.AddSensor(r.Context(), cmd)
+	sensor, dossier, err := a.service.AddSensor(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return

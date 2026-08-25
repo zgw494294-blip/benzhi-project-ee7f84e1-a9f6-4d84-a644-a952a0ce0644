@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 
 	"buoy-calibration-gate/internal/calibration"
@@ -24,7 +25,7 @@ func (a *API) ReturnDeviationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.DossierID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), version, actor
-	deviation, dossier, err := a.service.ReturnDeviation(r.Context(), cmd)
+	deviation, dossier, err := a.service.ReturnDeviation(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -49,7 +50,7 @@ func (a *API) ApproveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.DossierID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), version, actor
-	_, digest, dossier, err := a.service.Approve(r.Context(), cmd)
+	_, digest, dossier, err := a.service.Approve(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return

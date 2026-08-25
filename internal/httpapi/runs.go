@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -26,7 +27,7 @@ func (a *API) SubmitRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cmd.DossierID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), version, actor
 	cmd.IdempotencyKey = strings.TrimSpace(r.Header.Get("Idempotency-Key"))
-	run, deviation, dossier, replay, err := a.service.SubmitRun(r.Context(), cmd)
+	run, deviation, dossier, replay, err := a.service.SubmitRun(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return

@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -33,7 +34,7 @@ func (a *API) CreateDossierHandler(w http.ResponseWriter, r *http.Request) {
 	cmd := calibration.CreateDossierCommand{BuoyCode: body.BuoyCode, TargetArea: body.TargetArea, PlannedDeploymentAt: planned.UTC(), Owner: body.Owner}
 	cmd.Actor = actor
 	cmd.IdempotencyKey = strings.TrimSpace(r.Header.Get("Idempotency-Key"))
-	dossier, replay, err := a.service.CreateDossier(r.Context(), cmd)
+	dossier, replay, err := a.service.CreateDossier(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return

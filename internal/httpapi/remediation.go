@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 
 	"buoy-calibration-gate/internal/calibration"
@@ -24,7 +25,7 @@ func (a *API) RemediateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.DossierID, cmd.DeviationID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), r.PathValue("deviationID"), version, actor
-	deviation, retest, attempt, dossier, err := a.service.Remediate(r.Context(), cmd)
+	deviation, retest, attempt, dossier, err := a.service.Remediate(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -49,7 +50,7 @@ func (a *API) BatchRemediateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cmd.DossierID, cmd.ExpectedVersion, cmd.Actor = r.PathValue("dossierID"), version, actor
-	results, dossier, err := a.service.BatchRemediate(r.Context(), cmd)
+	results, dossier, err := a.service.BatchRemediate(context.WithoutCancel(r.Context()), cmd)
 	if err != nil {
 		writeError(w, err)
 		return
